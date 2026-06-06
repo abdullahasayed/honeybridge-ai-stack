@@ -3,509 +3,1250 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Local RAG Agent</title>
-  <link href="https://cdn.jsdelivr.net/npm/@n8n/chat@1.0.0/dist/style.css" rel="stylesheet" />
+  <title>Local AI Chat</title>
+  <link href="https://cdn.jsdelivr.net/npm/@n8n/chat@1.0.0/dist/style.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-primary: #0c0c10;
-      --bg-secondary: #14141a;
-      --bg-card: #1c1c26;
-      --accent-primary: #6366f1;
-      --accent-secondary: #22d3ee;
-      --accent-glow: rgba(99, 102, 241, 0.4);
-      --text-primary: #f4f4f6;
-      --text-secondary: #9898a8;
-      --border-subtle: rgba(255, 255, 255, 0.08);
+      --page: #f6f7f9;
+      --surface: #ffffff;
+      --surface-2: #eef2f6;
+      --surface-3: #e3e8ef;
+      --ink: #17202a;
+      --muted: #5c6a78;
+      --muted-2: #7c8a99;
+      --border: #d9e1ea;
+      --primary: #2563eb;
+      --primary-strong: #1d4ed8;
+      --primary-soft: #dbeafe;
+      --teal: #0f766e;
+      --teal-soft: #ccfbf1;
+      --amber: #a16207;
+      --amber-soft: #fef3c7;
+      --danger: #b42318;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
+      --radius: 8px;
+      --chat--color-primary: #2563eb;
+      --chat--color-primary-shade-50: #1d4ed8;
+      --chat--color-primary-shade-100: #1e40af;
+      --chat--color-secondary: #0f766e;
+      --chat--color-white: #ffffff;
+      --chat--color-light: #f8fafc;
+      --chat--color-light-shade-50: #eef2f6;
+      --chat--color-light-shade-100: #d9e1ea;
+      --chat--color-medium: #7c8a99;
+      --chat--color-dark: #17202a;
+      --chat--color-disabled: #a7b2bf;
+      --chat--color-typing: #5c6a78;
+      --chat--spacing: 1rem;
+      --chat--border-radius: 8px;
+      --chat--transition-duration: 0.18s;
+      --chat--textarea--height: 56px;
+      --chat--header--background: #ffffff;
+      --chat--header--color: #17202a;
+      --chat--message--bot--background: #eef2f6;
+      --chat--message--bot--color: #17202a;
+      --chat--message--user--background: #2563eb;
+      --chat--message--user--color: #ffffff;
+      --chat--message--pre--background: #101828;
+      --chat--window--background: #ffffff;
+      --chat--input--background: #ffffff;
+      --chat--input--border: 1px solid #d9e1ea;
     }
 
     * {
-      margin: 0;
-      padding: 0;
       box-sizing: border-box;
     }
 
+    html,
     body {
-      font-family: 'Instrument Sans', system-ui, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      overflow: hidden;
-    }
-
-    /* Animated mesh gradient background */
-    .bg-mesh {
-      position: fixed;
-      inset: 0;
-      z-index: -2;
-      background: 
-        radial-gradient(ellipse 100% 80% at 10% 0%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
-        radial-gradient(ellipse 80% 60% at 90% 100%, rgba(34, 211, 238, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
-    }
-
-    /* Noise texture overlay */
-    .noise-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      opacity: 0.03;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    }
-
-    .container {
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding: 1.5rem;
-      gap: 1rem;
-    }
-
-    header {
-      text-align: center;
-      padding: 0.5rem 0;
-      animation: fadeIn 0.6s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .title-wrapper {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    /* Reset button styling */
-    .reset-btn {
-      position: absolute;
-      top: 1rem;
-      right: 1.25rem;
-      width: 36px;
-      height: 36px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: var(--text-secondary);
-    }
-
-    .reset-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
-      color: var(--text-primary);
-      transform: rotate(45deg);
-    }
-
-    .reset-btn:active {
-      transform: rotate(180deg);
-    }
-
-    .reset-btn svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    .chat-container {
-      position: relative;
-    }
-
-    .title-icon {
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      box-shadow: 0 4px 20px var(--accent-glow);
-    }
-
-    h1 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .chat-container {
-      flex: 1;
-      min-height: 0;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-subtle);
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 
-        0 0 0 1px rgba(255, 255, 255, 0.05),
-        0 20px 50px -12px rgba(0, 0, 0, 0.5),
-        0 0 100px -20px var(--accent-glow);
-      animation: slideUp 0.5s ease-out 0.1s both;
-    }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    #n8n-chat {
-      width: 100%;
       height: 100%;
     }
 
-    /* n8n Chat Widget Customizations - Full mode */
-    :root {
-      --chat--color-primary: #6366f1;
-      --chat--color-primary-shade-50: rgba(99, 102, 241, 0.5);
-      --chat--color-primary-shade-100: rgba(99, 102, 241, 0.2);
-      --chat--color-secondary: #22d3ee;
-      --chat--color-white: #f4f4f6;
-      --chat--color-light: #1c1c26;
-      --chat--color-light-shade-50: #14141a;
-      --chat--color-medium: #9898a8;
-      --chat--color-dark: #0c0c10;
-      --chat--color-disabled: #3a3a4a;
-      --chat--color-typing: #9898a8;
-      --chat--spacing: 1rem;
-      --chat--border-radius: 16px;
-      --chat--transition-duration: 0.2s;
-      --chat--textarea--height: 56px;
-      --chat--header--background: linear-gradient(180deg, #1c1c26 0%, #14141a 100%);
-      --chat--header--color: #f4f4f6;
-      --chat--message--bot--background: #252532;
-      --chat--message--bot--color: #f4f4f6;
-      --chat--message--user--background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-      --chat--message--user--color: #ffffff;
-      --chat--message--pre--background: #0c0c10;
-      --chat--window--background: #14141a;
-      --chat--input--background: #1c1c26;
-      --chat--input--border: 1px solid rgba(255, 255, 255, 0.1);
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(246, 247, 249, 0.96)),
+        linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(15, 118, 110, 0.08) 45%, rgba(161, 98, 7, 0.08));
+      color: var(--ink);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
     }
 
-    /* Override chat widget styles for fullscreen embedded mode */
-    .chat-container :deep(.n8n-chat),
-    .chat-container .n8n-chat {
-      height: 100% !important;
-      max-height: 100% !important;
+    button,
+    input {
+      font: inherit;
     }
 
-    /* Chat messages styling fixes - comprehensive selectors */
-    [class*="chat-message"] {
-      max-width: 85% !important;
+    button {
+      appearance: none;
     }
 
-    /* Bot messages - all possible selectors */
-    [class*="chat-message-bot"],
-    [class*="message-bot"],
-    [class*="bot-message"],
-    .chat-message.bot,
-    [data-type="bot"] {
-      background: #252532 !important;
-      color: #f4f4f6 !important;
-      border-radius: 16px 16px 16px 4px !important;
-      padding: 1rem 1.25rem !important;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    a {
+      color: inherit;
+      text-decoration: none;
     }
 
-    /* User messages - all possible selectors */
-    [class*="chat-message-user"],
-    [class*="message-user"],
-    [class*="user-message"],
-    .chat-message.user,
-    [data-type="user"],
-    [class*="chat-message"][class*="from-user"],
-    [class*="message"][class*="outgoing"] {
-      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-      color: #ffffff !important;
-      border-radius: 16px 16px 4px 16px !important;
-      padding: 1rem 1.25rem !important;
-      box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3) !important;
+    .app-shell {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 16px;
+      height: 100vh;
+      padding: 18px;
     }
 
-    /* Target n8n chat specific user message wrapper */
-    .chat-message-row.from-user .chat-message-bubble,
-    [class*="chat-message-row"][class*="from-user"] [class*="bubble"],
-    [class*="from-user"] [class*="chat-message-text"],
-    [class*="from-user"] [class*="message-content"] {
-      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-      color: #ffffff !important;
-      border-radius: 16px 16px 4px 16px !important;
-      padding: 0.875rem 1.125rem !important;
-      box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3) !important;
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 64px;
     }
 
-    /* Fix text colors in bot messages */
-    [class*="chat-message-bot"] p,
-    [class*="chat-message-bot"] span,
-    [class*="chat-message-bot"] div,
-    [class*="message-bot"] p,
-    [class*="message-bot"] span,
-    [class*="bot-message"] p,
-    [class*="bot-message"] span {
-      color: #f4f4f6 !important;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
     }
 
-    /* Fix text colors in user messages */
-    [class*="chat-message-user"] p,
-    [class*="chat-message-user"] span,
-    [class*="chat-message-user"] div,
-    [class*="message-user"] p,
-    [class*="message-user"] span,
-    [class*="user-message"] p,
-    [class*="user-message"] span {
-      color: #ffffff !important;
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(37, 99, 235, 0.18);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+      color: var(--primary);
     }
 
-    /* Code blocks in messages */
-    [class*="chat-message"] pre,
-    [class*="chat-message"] code {
-      background: #0c0c10 !important;
-      color: #22d3ee !important;
-      border-radius: 8px !important;
-      font-family: 'IBM Plex Mono', monospace !important;
+    .brand-mark svg {
+      width: 22px;
+      height: 22px;
     }
 
-    /* Message text wrapper styling */
-    [class*="chat-message-markdown"],
-    [class*="message-text"],
-    [class*="chat-text"] {
-      color: inherit !important;
+    h1 {
+      margin: 0;
+      font-size: clamp(1.25rem, 2vw, 1.65rem);
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1.15;
     }
 
-    /* Input area styling */
-    .n8n-chat .chat-input {
-      background: #1c1c26 !important;
-      border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-      padding: 1rem !important;
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.4;
     }
 
-    .n8n-chat .chat-input textarea {
-      background: #252532 !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      border-radius: 12px !important;
-      color: #f4f4f6 !important;
-      font-family: 'Instrument Sans', system-ui, sans-serif !important;
-      padding: 0.875rem 1rem !important;
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
-    .n8n-chat .chat-input textarea::placeholder {
-      color: #6a6a7a !important;
+    .status-pill,
+    .icon-button,
+    .text-button,
+    .service-link,
+    .prompt-button {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
 
-    .n8n-chat .chat-input textarea:focus {
-      border-color: rgba(99, 102, 241, 0.5) !important;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
-      outline: none !important;
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 12px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      white-space: nowrap;
     }
 
-    /* Send button */
-    .n8n-chat .chat-input button {
-      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-      border: none !important;
-      border-radius: 10px !important;
-      color: #ffffff !important;
-      transition: all 0.2s ease !important;
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--amber);
+      box-shadow: 0 0 0 4px var(--amber-soft);
     }
 
-    .n8n-chat .chat-input button:hover {
-      transform: scale(1.05) !important;
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4) !important;
+    .status-pill.ready .status-dot {
+      background: var(--teal);
+      box-shadow: 0 0 0 4px var(--teal-soft);
     }
 
-    /* Welcome screen customization */
-    .n8n-chat .chat-welcome {
-      background: #14141a !important;
-      padding: 2rem !important;
+    .icon-button,
+    .text-button,
+    .prompt-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 38px;
+      cursor: pointer;
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
     }
 
-    .n8n-chat .chat-welcome h1,
-    .n8n-chat .chat-welcome h2,
-    .n8n-chat .chat-welcome h3 {
-      color: #f4f4f6 !important;
+    .icon-button {
+      width: 38px;
+      padding: 0;
     }
 
-    .n8n-chat .chat-welcome p {
-      color: #9898a8 !important;
+    .text-button {
+      padding: 0 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
     }
 
-    .n8n-chat .chat-welcome button {
-      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-      border: none !important;
-      border-radius: 12px !important;
-      color: #ffffff !important;
-      font-weight: 600 !important;
-      padding: 0.875rem 1.75rem !important;
-      transition: all 0.2s ease !important;
+    .icon-button:hover,
+    .text-button:hover,
+    .prompt-button:hover,
+    .service-link:hover {
+      border-color: #b9c6d5;
+      background: #f8fafc;
     }
 
-    .n8n-chat .chat-welcome button:hover {
-      transform: translateY(-2px) !important;
-      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4) !important;
+    .icon-button:active,
+    .text-button:active,
+    .prompt-button:active {
+      transform: translateY(1px);
     }
 
-    /* Header styling */
-    .n8n-chat .chat-header {
-      background: linear-gradient(180deg, #1c1c26 0%, #14141a 100%) !important;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-      padding: 1rem 1.25rem !important;
+    .icon-button svg,
+    .text-button svg,
+    .service-link svg {
+      width: 17px;
+      height: 17px;
+      flex: 0 0 auto;
     }
 
-    .n8n-chat .chat-header h1,
-    .n8n-chat .chat-header span {
-      color: #f4f4f6 !important;
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(270px, 340px) minmax(0, 1fr);
+      gap: 16px;
+      min-height: 0;
     }
 
-    /* Scrollbar styling */
-    .n8n-chat ::-webkit-scrollbar {
+    .panel,
+    .chat-panel {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel-scroll {
+      overflow: auto;
+      padding: 16px;
+    }
+
+    .section {
+      padding: 0 0 18px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 18px;
+    }
+
+    .section:last-child {
+      border-bottom: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .section-title {
+      margin: 0 0 10px;
+      color: var(--ink);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .endpoint-box {
+      display: grid;
+      gap: 10px;
+    }
+
+    .endpoint-field {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      min-height: 42px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #f8fafc;
+    }
+
+    .endpoint-field input {
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--ink);
+      padding: 0 12px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.78rem;
+    }
+
+    .endpoint-field button {
+      width: 42px;
+      border: 0;
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .service-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .service-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 10px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 600;
+      transition: border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .prompt-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .prompt-button {
+      justify-content: flex-start;
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 12px;
+      color: var(--ink);
+      text-align: left;
+      font-size: 0.88rem;
+      line-height: 1.35;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .check-icon {
+      display: grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--teal-soft);
+      color: var(--teal);
+      margin-top: 1px;
+    }
+
+    .check-icon svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .chat-panel {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .chat-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 56px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .chat-heading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .chat-heading strong {
+      display: block;
+      font-size: 0.94rem;
+      line-height: 1.2;
+    }
+
+    .chat-heading span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.25;
+    }
+
+    .chat-badge {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .chat-badge svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .chat-frame {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: var(--surface);
+    }
+
+    .conversation-log {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+      overflow: auto;
+      padding: 18px;
+      background: #ffffff;
+    }
+
+    .message {
+      display: grid;
+      gap: 5px;
+      max-width: min(760px, 84%);
+    }
+
+    .message.user {
+      align-self: flex-end;
+    }
+
+    .message.assistant,
+    .message.system {
+      align-self: flex-start;
+    }
+
+    .message-meta {
+      color: var(--muted-2);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .message.user .message-meta {
+      text-align: right;
+    }
+
+    .message-bubble {
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      color: var(--ink);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message.user .message-bubble {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .message.assistant .message-bubble {
+      border: 1px solid var(--border);
+      background: #eef2f6;
+    }
+
+    .message.system .message-bubble {
+      border: 1px solid #f7d674;
+      background: var(--amber-soft);
+      color: #5f3b00;
+    }
+
+    .typing-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .typing-dot {
       width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted-2);
+      animation: typingPulse 1s infinite ease-in-out;
     }
 
-    .n8n-chat ::-webkit-scrollbar-track {
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes typingPulse {
+      0%,
+      80%,
+      100% {
+        opacity: 0.35;
+        transform: translateY(0);
+      }
+
+      40% {
+        opacity: 1;
+        transform: translateY(-2px);
+      }
+    }
+
+    .composer {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .composer-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .composer textarea {
+      width: 100%;
+      min-height: 52px;
+      max-height: 150px;
+      resize: vertical;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #f8fafc;
+      color: var(--ink);
+      padding: 13px 14px;
+      font: inherit;
+      line-height: 1.45;
+      outline: none;
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .composer textarea:focus {
+      border-color: rgba(37, 99, 235, 0.65);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    }
+
+    .composer textarea::placeholder {
+      color: var(--muted-2);
+    }
+
+    .send-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 112px;
+      min-height: 52px;
+      border: 1px solid var(--primary);
+      border-radius: var(--radius);
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    }
+
+    .send-button:hover {
+      border-color: var(--primary-strong);
+      background: var(--primary-strong);
+    }
+
+    .send-button:active {
+      transform: translateY(1px);
+    }
+
+    .send-button:disabled {
+      border-color: #b8c4d2;
+      background: #b8c4d2;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .send-button svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .composer-status {
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.4;
+    }
+
+    .conversation-log::-webkit-scrollbar,
+    .panel-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .conversation-log::-webkit-scrollbar-track,
+    .panel-scroll::-webkit-scrollbar-track {
       background: transparent;
     }
 
-    .n8n-chat ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
+    .conversation-log::-webkit-scrollbar-thumb,
+    .panel-scroll::-webkit-scrollbar-thumb {
+      background: #c8d2de;
+      border-radius: 999px;
     }
 
-    .n8n-chat ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.2);
+    .conversation-log::-webkit-scrollbar-thumb:hover,
+    .panel-scroll::-webkit-scrollbar-thumb:hover {
+      background: #aebbcc;
     }
 
-    /* Initial messages styling */
-    .n8n-chat .chat-message-initial {
-      background: #252532 !important;
-      color: #f4f4f6 !important;
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
-    /* Typing indicator */
-    .n8n-chat .chat-typing {
-      color: #9898a8 !important;
-    }
-
-    @media (max-width: 640px) {
-      .container {
-        padding: 1rem;
-      }
-      
-      h1 {
-        font-size: 1.35rem;
+    @media (max-width: 920px) {
+      body {
+        overflow: auto;
       }
 
-      .title-icon {
-        width: 36px;
-        height: 36px;
-        font-size: 1.1rem;
+      .app-shell {
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .topbar-actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        min-height: auto;
+      }
+
+      .panel-scroll {
+        overflow: visible;
+      }
+
+      .chat-panel {
+        min-height: 680px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .app-shell {
+        padding: 12px;
+        gap: 12px;
+      }
+
+      .topbar-actions,
+      .service-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .status-pill {
+        grid-column: 1 / -1;
+        justify-content: center;
+      }
+
+      .text-button,
+      .icon-button,
+      .service-link {
+        width: 100%;
+      }
+
+      .chat-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 12px;
+      }
+
+      .chat-toolbar .topbar-actions {
+        display: flex;
+        width: 100%;
+      }
+
+      .chat-panel {
+        min-height: 640px;
+      }
+
+      .composer-row {
+        grid-template-columns: 1fr;
+      }
+
+      .send-button {
+        width: 100%;
+      }
+
+      .message {
+        max-width: 92%;
       }
     }
   </style>
 </head>
 <body>
-  <div class="bg-mesh"></div>
-  <div class="noise-overlay"></div>
-  
-  <div class="container">
-    <header>
-      <div class="title-wrapper">
-        <div class="title-icon">🧠</div>
-        <h1>Your Local RAG Agent</h1>
+  <main class="app-shell">
+    <header class="topbar" aria-label="Page header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v18"></path>
+            <path d="M7.5 5.25a3.25 3.25 0 0 0-1.4 6.18"></path>
+            <path d="M16.5 5.25a3.25 3.25 0 0 1 1.4 6.18"></path>
+            <path d="M7.2 18.7a3.5 3.5 0 0 1-.9-6.62"></path>
+            <path d="M16.8 18.7a3.5 3.5 0 0 0 .9-6.62"></path>
+            <path d="M8.5 9.25h7"></path>
+            <path d="M8.5 14.75h7"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>Local AI Chat</h1>
+          <p class="subtitle">Ask your self-hosted n8n and Ollama assistant from a focused workspace.</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions" aria-label="Global actions">
+        <div id="status-pill" class="status-pill" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="status-text">Checking n8n</span>
+        </div>
+        <button class="text-button" type="button" id="new-chat-button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+            <path d="M21 3v6h-6"></path>
+          </svg>
+          New chat
+        </button>
+        <a class="text-button" href="http://localhost:5678" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 3h6v6"></path>
+            <path d="M10 14 21 3"></path>
+            <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"></path>
+          </svg>
+          Open n8n
+        </a>
       </div>
     </header>
 
-    <div class="chat-container">
-      <button class="reset-btn" onclick="resetConversation()" title="Clear conversation">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-      </button>
-      <div id="n8n-chat"></div>
-    </div>
-  </div>
+    <section class="layout" aria-label="Chat workspace">
+      <aside class="panel" aria-label="Assistant controls">
+        <div class="panel-scroll">
+          <section class="section" aria-labelledby="endpoint-title">
+            <h2 class="section-title" id="endpoint-title">Connection</h2>
+            <div class="endpoint-box">
+              <label class="sr-only" for="webhook-url">Chat webhook URL</label>
+              <div class="endpoint-field">
+                <input id="webhook-url" type="url" spellcheck="false" autocomplete="off">
+                <button id="save-webhook-button" type="button" title="Save endpoint" aria-label="Save endpoint">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path>
+                    <path d="M17 21v-8H7v8"></path>
+                    <path d="M7 3v5h8"></path>
+                  </svg>
+                </button>
+              </div>
+              <p class="hint">Default uses the imported demo workflow. If your Chat Trigger has a different webhook ID, paste it here and save.</p>
+            </div>
+          </section>
+
+          <section class="section" aria-labelledby="services-title">
+            <h2 class="section-title" id="services-title">Local services</h2>
+            <div class="service-grid">
+              <a class="service-link" href="http://localhost:5678" target="_blank" rel="noreferrer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="14" rx="2"></rect>
+                  <path d="M8 21h8"></path>
+                  <path d="M12 18v3"></path>
+                </svg>
+                n8n
+              </a>
+              <a class="service-link" href="http://localhost:6333/dashboard" target="_blank" rel="noreferrer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 7c0 1.66 3.58 3 8 3s8-1.34 8-3-3.58-3-8-3-8 1.34-8 3Z"></path>
+                  <path d="M4 7v5c0 1.66 3.58 3 8 3s8-1.34 8-3V7"></path>
+                  <path d="M4 12v5c0 1.66 3.58 3 8 3s8-1.34 8-3v-5"></path>
+                </svg>
+                Qdrant
+              </a>
+              <a class="service-link" href="http://localhost:11434" target="_blank" rel="noreferrer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 8V4H8"></path>
+                  <rect x="4" y="8" width="16" height="12" rx="2"></rect>
+                  <path d="M2 14h2"></path>
+                  <path d="M20 14h2"></path>
+                  <path d="M9 13v2"></path>
+                  <path d="M15 13v2"></path>
+                </svg>
+                Ollama
+              </a>
+              <a class="service-link" href="http://localhost:5001" target="_blank" rel="noreferrer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+                  <path d="M14 2v6h6"></path>
+                  <path d="M8 13h8"></path>
+                  <path d="M8 17h5"></path>
+                </svg>
+                Docling
+              </a>
+            </div>
+          </section>
+
+          <section class="section" aria-labelledby="prompts-title">
+            <h2 class="section-title" id="prompts-title">Quick prompts</h2>
+            <div class="prompt-list">
+              <button class="prompt-button" type="button" data-prompt="Summarize the documents in my knowledge base and list the main themes.">Summarize the knowledge base</button>
+              <button class="prompt-button" type="button" data-prompt="What documents or sources did you use for that answer? Include file names when available.">Show sources for an answer</button>
+              <button class="prompt-button" type="button" data-prompt="Find any action items, deadlines, owners, and risks mentioned in the uploaded documents.">Extract action items</button>
+              <button class="prompt-button" type="button" data-prompt="Compare the key differences between the relevant documents and highlight any conflicts.">Compare relevant files</button>
+            </div>
+          </section>
+
+          <section class="section" aria-labelledby="readiness-title">
+            <h2 class="section-title" id="readiness-title">Before chatting</h2>
+            <ul class="checklist">
+              <li>
+                <span class="check-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"></path></svg>
+                </span>
+                Start Docker Compose with the profile you use for Ollama and Docling.
+              </li>
+              <li>
+                <span class="check-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"></path></svg>
+                </span>
+                Activate the n8n workflow that contains the Chat Trigger.
+              </li>
+              <li>
+                <span class="check-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"></path></svg>
+                </span>
+                Add files to the shared RAG folder before asking document-specific questions.
+              </li>
+            </ul>
+          </section>
+        </div>
+      </aside>
+
+      <section class="chat-panel" aria-label="Chat">
+        <div class="chat-toolbar">
+          <div class="chat-heading">
+            <span class="chat-badge" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path>
+              </svg>
+            </span>
+            <div>
+              <strong>RAG assistant</strong>
+              <span>Responses are generated through your local n8n webhook.</span>
+            </div>
+          </div>
+
+          <div class="topbar-actions" aria-label="Chat actions">
+            <button class="icon-button" type="button" id="copy-link-button" title="Copy page link" aria-label="Copy page link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </button>
+            <button class="icon-button" type="button" id="reload-chat-button" title="Reload chat" aria-label="Reload chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+                <path d="M21 3v6h-6"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="chat-frame">
+          <div class="conversation-log" id="conversation-log" aria-live="polite">
+            <article class="message assistant">
+              <div class="message-meta">Assistant</div>
+              <div class="message-bubble">Hello. I am ready to send prompts directly to your active n8n Chat Trigger.</div>
+            </article>
+          </div>
+        </div>
+        <form class="composer" id="prompt-form">
+          <label class="sr-only" for="prompt-input">Message</label>
+          <div class="composer-row">
+            <textarea id="prompt-input" rows="2" placeholder="Type a prompt to start chatting..." autocomplete="off"></textarea>
+            <button class="send-button" id="send-prompt-button" type="submit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m22 2-7 20-4-9-9-4Z"></path>
+                <path d="M22 2 11 13"></path>
+              </svg>
+              Send
+            </button>
+          </div>
+          <div class="composer-status" id="composer-status" role="status" aria-live="polite"></div>
+        </form>
+      </section>
+    </section>
+  </main>
 
   <script>
-    // Reset conversation function - clears session storage and reloads
-    function resetConversation() {
-      try {
-        // Clear n8n chat session from localStorage
-        localStorage.removeItem('n8n-chat/sessionId');
-        
-        // Clear any other n8n-chat related keys
+    const DEFAULT_WEBHOOK_URL = 'http://localhost:5678/webhook/cdb5c076-d458-4b9d-8398-f43bd25059b1/chat';
+    const STORAGE_PREFIX = 'local-ai-chat/';
+    const WEBHOOK_STORAGE_KEY = `${STORAGE_PREFIX}webhookUrl`;
+    const SESSION_STORAGE_KEY = `${STORAGE_PREFIX}sessionId`;
+    let isSending = false;
+
+    function getWebhookUrl() {
+      return localStorage.getItem(WEBHOOK_STORAGE_KEY) || DEFAULT_WEBHOOK_URL;
+    }
+
+    function getSessionId() {
+      let sessionId = localStorage.getItem(SESSION_STORAGE_KEY);
+
+      if (!sessionId) {
+        sessionId = window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+      }
+
+      return sessionId;
+    }
+
+    function setComposerStatus(message) {
+      const status = document.getElementById('composer-status');
+
+      if (status) {
+        status.textContent = message;
+      }
+    }
+
+    function clearChatSession() {
+      const stores = [localStorage, sessionStorage];
+
+      stores.forEach((store) => {
         const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('n8n-chat/')) {
+
+        for (let index = 0; index < store.length; index += 1) {
+          const key = store.key(index);
+
+          if (key && (key.startsWith('n8n-chat/') || key.startsWith('@n8n/chat') || key === SESSION_STORAGE_KEY)) {
             keysToRemove.push(key);
           }
         }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-      } catch (e) {
-        console.warn('Error clearing localStorage:', e);
+
+        keysToRemove.forEach((key) => store.removeItem(key));
+      });
+    }
+
+    function appendMessage(role, text) {
+      const log = document.getElementById('conversation-log');
+      const message = document.createElement('article');
+      const meta = document.createElement('div');
+      const bubble = document.createElement('div');
+
+      message.className = `message ${role}`;
+      meta.className = 'message-meta';
+      meta.textContent = role === 'user' ? 'You' : role === 'system' ? 'Status' : 'Assistant';
+      bubble.className = 'message-bubble';
+      bubble.textContent = text;
+
+      message.append(meta, bubble);
+      log.append(message);
+      log.scrollTop = log.scrollHeight;
+
+      return message;
+    }
+
+    function appendTypingMessage() {
+      const log = document.getElementById('conversation-log');
+      const message = document.createElement('article');
+      const meta = document.createElement('div');
+      const bubble = document.createElement('div');
+      const typing = document.createElement('span');
+
+      message.className = 'message assistant';
+      meta.className = 'message-meta';
+      meta.textContent = 'Assistant';
+      bubble.className = 'message-bubble';
+      typing.className = 'typing-row';
+      typing.setAttribute('aria-label', 'Waiting for response');
+      typing.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+      bubble.append(typing);
+      message.append(meta, bubble);
+      log.append(message);
+      log.scrollTop = log.scrollHeight;
+
+      return message;
+    }
+
+    function extractResponseText(payload) {
+      if (payload == null) {
+        return 'Workflow completed, but it returned an empty response.';
+      }
+
+      if (typeof payload === 'string') {
+        return payload;
+      }
+
+      if (Array.isArray(payload)) {
+        return extractResponseText(payload[0]);
+      }
+
+      const candidates = [
+        payload.output,
+        payload.text,
+        payload.response,
+        payload.message,
+        payload.chatOutput,
+        payload.data?.output,
+        payload.data?.text,
+        payload.data?.response,
+        payload.message?.content,
+      ];
+
+      const match = candidates.find((value) => typeof value === 'string' && value.trim());
+
+      if (match) {
+        return match;
+      }
+
+      return JSON.stringify(payload, null, 2);
+    }
+
+    async function readWebhookResponse(response) {
+      const raw = await response.text();
+
+      if (!raw) {
+        return null;
       }
 
       try {
-        // Clear from sessionStorage as well
-        sessionStorage.removeItem('n8n-chat/sessionId');
-        
-        const sessionKeysToRemove = [];
-        for (let i = 0; i < sessionStorage.length; i++) {
-          const key = sessionStorage.key(i);
-          if (key && key.startsWith('n8n-chat/')) {
-            sessionKeysToRemove.push(key);
-          }
-        }
-        sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
-      } catch (e) {
-        console.warn('Error clearing sessionStorage:', e);
+        return JSON.parse(raw);
+      } catch (error) {
+        return raw;
+      }
+    }
+
+    async function sendWorkflowMessage(prompt) {
+      const response = await fetch(getWebhookUrl(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'sendMessage',
+          sessionId: getSessionId(),
+          chatInput: prompt,
+          message: prompt,
+          text: prompt,
+        }),
+      });
+
+      const payload = await readWebhookResponse(response);
+
+      if (!response.ok) {
+        const detail = extractResponseText(payload);
+        throw new Error(`n8n returned HTTP ${response.status}${detail ? `: ${detail}` : ''}`);
       }
 
-      // Reload the page to start fresh
-      location.reload();
+      return extractResponseText(payload);
     }
-  </script>
 
-  <script type="module">
-    import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat@1.0.0/dist/chat.bundle.es.js';
+    function showButtonSavedState(button, label) {
+      const originalTitle = button.getAttribute('title');
+      button.setAttribute('title', label);
+      button.setAttribute('aria-label', label);
 
-    createChat({
-      webhookUrl: 'http://localhost:5678/webhook/<YOUR-WEBHOOK-ID>/chat',
-      target: '#n8n-chat',
-      mode: 'fullscreen',
-      showWelcomeScreen: false,
-      defaultLanguage: 'en',
-      initialMessages: [
-        'Hello! 👋',
-        'I\'m your local RAG agent. Ask me anything about your documents.',
-      ],
-      i18n: {
-        en: {
-          title: 'RAG Agent',
-          subtitle: 'Ask questions about your documents',
-          footer: '',
-          getStarted: 'Start Chatting',
-          inputPlaceholder: 'Ask me anything...',
-          closeButtonTooltip: 'Close chat',
-        },
-      },
-      webhookConfig: {
-        method: 'POST',
-        headers: {}
-      },
-      chatInputKey: 'chatInput',
-      loadPreviousSession: true,
-      enableStreaming: true,
+      window.setTimeout(() => {
+        if (originalTitle) {
+          button.setAttribute('title', originalTitle);
+          button.setAttribute('aria-label', originalTitle);
+        }
+      }, 1400);
+    }
+
+    async function updateN8nStatus() {
+      const pill = document.getElementById('status-pill');
+      const text = document.getElementById('status-text');
+
+      try {
+        await fetch('http://localhost:5678/healthz', {
+          method: 'GET',
+          mode: 'no-cors',
+          cache: 'no-store',
+        });
+
+        pill.classList.add('ready');
+        text.textContent = 'n8n reachable';
+      } catch (error) {
+        pill.classList.remove('ready');
+        text.textContent = 'Start n8n';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const webhookInput = document.getElementById('webhook-url');
+      const saveWebhookButton = document.getElementById('save-webhook-button');
+      const newChatButton = document.getElementById('new-chat-button');
+      const reloadChatButton = document.getElementById('reload-chat-button');
+      const copyLinkButton = document.getElementById('copy-link-button');
+      const promptForm = document.getElementById('prompt-form');
+      const promptInput = document.getElementById('prompt-input');
+      const sendPromptButton = document.getElementById('send-prompt-button');
+
+      webhookInput.value = getWebhookUrl();
+
+      saveWebhookButton.addEventListener('click', () => {
+        const nextUrl = webhookInput.value.trim();
+
+        if (nextUrl) {
+          localStorage.setItem(WEBHOOK_STORAGE_KEY, nextUrl);
+          clearChatSession();
+          location.reload();
+        }
+      });
+
+      newChatButton.addEventListener('click', () => {
+        clearChatSession();
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        location.reload();
+      });
+
+      reloadChatButton.addEventListener('click', () => {
+        location.reload();
+      });
+
+      copyLinkButton.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          showButtonSavedState(copyLinkButton, 'Copied');
+        } catch (error) {
+          showButtonSavedState(copyLinkButton, 'Copy failed');
+        }
+      });
+
+      document.querySelectorAll('[data-prompt]').forEach((button) => {
+        button.addEventListener('click', () => {
+          promptInput.value = button.dataset.prompt;
+          sendPromptButton.disabled = !promptInput.value.trim();
+          promptInput.focus();
+          setComposerStatus('Prompt ready. Press Send to run the n8n workflow.');
+        });
+      });
+
+      promptInput.addEventListener('input', () => {
+        sendPromptButton.disabled = !promptInput.value.trim();
+        setComposerStatus('');
+      });
+
+      promptInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+          promptForm.requestSubmit();
+        }
+      });
+
+      promptForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const prompt = promptInput.value.trim();
+
+        if (!prompt || isSending) {
+          promptInput.focus();
+          return;
+        }
+
+        isSending = true;
+        appendMessage('user', prompt);
+        const typingMessage = appendTypingMessage();
+        promptInput.value = '';
+        sendPromptButton.disabled = true;
+        setComposerStatus('Sending to n8n workflow...');
+
+        try {
+          const responseText = await sendWorkflowMessage(prompt);
+          typingMessage.remove();
+          appendMessage('assistant', responseText);
+          setComposerStatus('Workflow response received.');
+        } catch (error) {
+          typingMessage.remove();
+          appendMessage('system', error.message || 'The workflow request failed.');
+          setComposerStatus('Workflow request failed. Check the webhook URL and n8n execution logs.');
+        } finally {
+          isSending = false;
+          sendPromptButton.disabled = !promptInput.value.trim();
+          promptInput.focus();
+        }
+      });
+
+      updateN8nStatus();
+      window.setInterval(updateN8nStatus, 30000);
     });
   </script>
 </body>

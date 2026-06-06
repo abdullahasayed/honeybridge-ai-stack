@@ -1,0 +1,538 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerOn": "folder",
+        "path": "/data/shared/rag-files/pending",
+        "events": [
+          "add"
+        ],
+        "options": {
+          "usePolling": true
+        }
+      },
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        424
+      ],
+      "id": "22f759ee-4935-45c5-b20a-cf27f7e9fc22",
+      "name": "Local File Trigger"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1632,
+        424
+      ],
+      "id": "ece71933-8b1e-4656-a2bb-7caa0cdf8fe5",
+      "name": "Read/Write Files from Disk",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://docling:5001/v1/convert/file",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "image_export_mode",
+              "value": "referenced"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1408,
+        424
+      ],
+      "id": "a6033922-b2d3-462e-aacd-2561e5e40c9f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "hivebrain",
+          "mode": "list",
+          "cachedResultName": "hivebrain"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -928,
+        16
+      ],
+      "id": "2fbd2842-b5d0-4967-83e6-b0fb72c0c9a0",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "SwNd7EyvG6xDEtHz",
+          "name": "Qdrant account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        240
+      ],
+      "id": "04666ea9-e375-4cf0-be0d-6e93eeda9fb0",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "38WCGVtkMPpXlAbX",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -832,
+        240
+      ],
+      "id": "c90bf83d-74f3-4136-bb8a-af4c67566b77",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 700,
+        "chunkOverlap": 15,
+        "options": {
+          "splitCode": "markdown"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        448
+      ],
+      "id": "1bdb7761-e48c-45ba-a5f7-37fb187abf23",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are HIVE, the internal knowledge assistant for Honey Bridge (Tarqiyah LLC),\nan SEO/GEO agency. Before answering any questions related to Honeybridge you MUST query the Qdrant knowledgebase. Do not\nanswer these from your own knowledge. If the knowledgebase returns nothing\nrelevant, say \"I'm not sure\" and specify what you are not sure about— never guess or\ninvent details. If you are not sure, you may still provide a guess but make sure you indicate it is a guess. You must output images in markdown format using the URL provided in the retrieved results. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1632,
+        -176
+      ],
+      "id": "53922382-c081-4142-b552-2e543097eed0",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        256
+      ],
+      "id": "622bfa91-6966-4a24-a21f-029d5da7fd4d",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "38WCGVtkMPpXlAbX",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use this to fetch information from the knowledgebase",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "hivebrain",
+          "mode": "list",
+          "cachedResultName": "hivebrain"
+        },
+        "topK": 5,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -1536,
+        48
+      ],
+      "id": "6bc88a79-dd6c-496f-9f2f-18865ed2c693",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "SwNd7EyvG6xDEtHz",
+          "name": "Qdrant account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Welcome to Hive. What's on your mind? (Remember, minimize input char count when possible). ",
+        "options": {
+          "allowFileUploads": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1888,
+        -176
+      ],
+      "id": "172de423-ba5f-4af5-bd74-f6870bf01715",
+      "name": "When chat message received",
+      "webhookId": "f777a62c-9d83-4c9a-bbbe-af94e1c8dfb8"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Base URL where images are hosted\nconst BASE_URL = 'http://localhost:8080/';\n\n// Loop over input items and inject full image URLs into md_content\nfor (const item of $input.all()) {\n  // The document object may be nested directly or under .document\n  const doc = item.json.document || item.json;\n\n  if (doc && typeof doc.md_content === 'string') {\n    // Replace markdown image refs ![alt](image_xxx.png) with full URL\n    // Only rewrites paths that are NOT already absolute (no http/https///)\n    doc.md_content = doc.md_content.replace(\n      /!\\[([^\\]]*)\\]\\((?!https?:\\/\\/|\\/\\/)([^)\\s]+)\\)/g,\n      (match, altText, imgPath) => {\n        // Strip any leading ./ or / so we don't double up slashes\n        const cleanPath = imgPath.replace(/^\\.?\\//, '');\n        return `![${altText}](${BASE_URL}${cleanPath})`;\n      }\n    );\n\n    // Optional: keep the original behaviour of adding a marker field\n    doc.myNewField = 1;\n  }\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        224
+      ],
+      "id": "c156fbe8-7c4d-4100-8420-8196e4ba185e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "imageNames",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -824,
+        624
+      ],
+      "id": "024d743e-399d-4821-9201-0649612c2d30",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "executeOnce": false,
+        "command": "=mv /data/shared/docling-scratch/{{ $json.imageNames }} /data/shared/extracted-images/"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        624
+      ],
+      "id": "62d1357c-1c02-4f41-923c-002f4640231c",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and extract image filenames from document.md_content\nfor (const item of $input.all()) {\n  // The markdown lives at item.json.document.md_content\n  const content = item.json.document?.md_content || '';\n\n  // Regex matches: ![Image](image_NNNNNN_<hash>.png)\n  const regex = /!\\[Image\\]\\((image_\\d+_[a-f0-9]+\\.(?:png|jpg|jpeg|gif|webp))\\)/gi;\n\n  const imageNames = [];\n  let match;\n  while ((match = regex.exec(content)) !== null) {\n    imageNames.push(match[1]);\n  }\n\n  item.json.imageNames = imageNames;\n  item.json.imageCount = imageNames.length;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        624
+      ],
+      "id": "1e3a3207-2ee1-4d02-982a-9e7f6e785c16",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.5",
+          "mode": "list",
+          "cachedResultName": "gpt-5.5"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1888,
+        256
+      ],
+      "id": "b00b93bd-9e1e-4ed5-af00-d1ea9445621b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "hcCKbaeQ9kuUnEYE",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gemma4:e4b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -1664,
+        48
+      ],
+      "id": "ae8d1fc9-9b7c-44e7-86c1-33efde870684",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "82wscfNGe1kcQJo4",
+          "name": "Ollama account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Local File Trigger": [
+      {
+        "json": {
+          "event": "add",
+          "path": "/data/shared/rag-files/pending/Internal Meetings 5.10.11 PM.pdf"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Read/Write Files from Disk": [
+      {
+        "json": {
+          "mimeType": "application/pdf",
+          "fileType": "pdf",
+          "fileName": "Internal Meetings 5.10.11 PM.pdf",
+          "fileExtension": "pdf",
+          "fileSize": "14 MB"
+        },
+        "binary": {
+          "data": {
+            "mimeType": "application/pdf",
+            "fileType": "pdf",
+            "fileExtension": "pdf",
+            "data": "filesystem-v2",
+            "directory": "/data/shared/rag-files/pending",
+            "fileName": "Internal Meetings 5.10.11 PM.pdf",
+            "id": "filesystem-v2:workflows/g6iiA2Bq2zfqB10G/executions/52/binary_data/2b300075-b197-4568-a79d-3ed6e163230e",
+            "fileSize": "14 MB",
+            "bytes": 13963888
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Local File Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f6c7c9c0-c175-4d59-8483-964d9e575192",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "27a4d118db756b666e354f05ff04704b3a7fb9c0caf581087a1023024e7ec998"
+  },
+  "id": "g6iiA2Bq2zfqB10G",
+  "tags": []
+}
