@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-05-27T02:20:32.114Z",
+  "createdAt": "2026-05-21T18:09:12.463Z",
+  "id": "g6iiA2Bq2zfqB10G",
   "name": "My workflow",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -323,46 +329,6 @@
       }
     }
   ],
-  "pinData": {
-    "Local File Trigger": [
-      {
-        "json": {
-          "event": "add",
-          "path": "/data/shared/rag-files/pending/Internal Meetings 5.10.11 PM.pdf"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Read/Write Files from Disk": [
-      {
-        "json": {
-          "mimeType": "application/pdf",
-          "fileType": "pdf",
-          "fileName": "Internal Meetings 5.10.11 PM.pdf",
-          "fileExtension": "pdf",
-          "fileSize": "14 MB"
-        },
-        "binary": {
-          "data": {
-            "mimeType": "application/pdf",
-            "fileType": "pdf",
-            "fileExtension": "pdf",
-            "data": "filesystem-v2",
-            "directory": "/data/shared/rag-files/pending",
-            "fileName": "Internal Meetings 5.10.11 PM.pdf",
-            "id": "filesystem-v2:workflows/g6iiA2Bq2zfqB10G/executions/52/binary_data/2b300075-b197-4568-a79d-3ed6e163230e",
-            "fileSize": "14 MB",
-            "bytes": 13963888
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
   "connections": {
     "Local File Trigger": {
       "main": [
@@ -523,16 +489,80 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "f6c7c9c0-c175-4d59-8483-964d9e575192",
+  "staticData": null,
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "27a4d118db756b666e354f05ff04704b3a7fb9c0caf581087a1023024e7ec998"
+    "templateCredsSetupCompleted": true
   },
-  "id": "g6iiA2Bq2zfqB10G",
-  "tags": []
+  "pinData": {
+    "Local File Trigger": [
+      {
+        "json": {
+          "event": "add",
+          "path": "/data/shared/rag-files/pending/Internal Meetings 5.10.11 PM.pdf"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Read/Write Files from Disk": [
+      {
+        "json": {
+          "mimeType": "application/pdf",
+          "fileType": "pdf",
+          "fileName": "Internal Meetings 5.10.11 PM.pdf",
+          "fileExtension": "pdf",
+          "fileSize": "14 MB"
+        },
+        "binary": {
+          "data": {
+            "mimeType": "application/pdf",
+            "fileType": "pdf",
+            "fileExtension": "pdf",
+            "data": "filesystem-v2",
+            "directory": "/data/shared/rag-files/pending",
+            "fileName": "Internal Meetings 5.10.11 PM.pdf",
+            "id": "filesystem-v2:workflows/g6iiA2Bq2zfqB10G/executions/52/binary_data/2b300075-b197-4568-a79d-3ed6e163230e",
+            "fileSize": "14 MB",
+            "bytes": 13963888
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "f6c7c9c0-c175-4d59-8483-964d9e575192",
+  "activeVersionId": "f6c7c9c0-c175-4d59-8483-964d9e575192",
+  "versionCounter": 288,
+  "triggerCount": 2,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-05-21T18:09:12.463Z",
+      "createdAt": "2026-05-21T18:09:12.463Z",
+      "role": "workflow:owner",
+      "workflowId": "g6iiA2Bq2zfqB10G",
+      "projectId": "brssccCsEIX1w1YY",
+      "project": {
+        "updatedAt": "2026-05-21T18:05:27.443Z",
+        "createdAt": "2026-05-21T18:03:52.761Z",
+        "id": "brssccCsEIX1w1YY",
+        "name": "Abdullah Sayed <abdullahasayed48@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "32c8c25b-d616-43d5-9917-15286f0395aa"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "HoneyBridge RAG Ingestion Pipeline v0.0",
+    "description": "POC "
+  }
 }

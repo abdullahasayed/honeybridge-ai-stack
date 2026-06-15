@@ -1,4 +1,11 @@
 .env
+
+# Local migration/backup artifacts — never push (contains the Postgres dump with encrypted credentials)
+volume-backups/
+
+# macOS noise
+.DS_Store
+
 shared/rag-files/pending/*
 !shared/rag-files/pending/.gitkeep
 shared/rag-files/processed/*

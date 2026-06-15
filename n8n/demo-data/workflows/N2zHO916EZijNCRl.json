@@ -1,0 +1,144 @@
+{
+  "updatedAt": "2026-05-21T19:24:38.864Z",
+  "createdAt": "2026-05-21T19:24:38.864Z",
+  "id": "N2zHO916EZijNCRl",
+  "name": "Image Processing Pipeline",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Loop over input items and extract image filenames from document.md_content\nfor (const item of $input.all()) {\n  // The markdown lives at item.json.document.md_content\n  const content = item.json.document?.md_content || '';\n\n  // Regex matches: ![Image](image_NNNNNN_<hash>.png)\n  const regex = /!\\[Image\\]\\((image_\\d+_[a-f0-9]+\\.(?:png|jpg|jpeg|gif|webp))\\)/gi;\n\n  const imageNames = [];\n  let match;\n  while ((match = regex.exec(content)) !== null) {\n    imageNames.push(match[1]);\n  }\n\n  item.json.imageNames = imageNames;\n  item.json.imageCount = imageNames.length;\n}\n\nreturn $input.all();",
+        "notice": ""
+      },
+      "typeVersion": 2,
+      "position": [
+        -256,
+        -32
+      ],
+      "id": "05abcb0d-bc94-427f-99d2-96c4d45007d1",
+      "name": "Code in JavaScript",
+      "disabled": false
+    },
+    {
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -32
+      ],
+      "id": "d31f81de-21d9-4246-8ec7-a4da75411113",
+      "name": "Split Out",
+      "disabled": false,
+      "parameters": {
+        "fieldToSplitOut": "imageNames",
+        "include": "noOtherFields",
+        "options": {}
+      },
+      "issues": {}
+    },
+    {
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        192,
+        -32
+      ],
+      "id": "be740d14-c543-4e9d-bc1f-4e510188ecba",
+      "name": "Execute Command",
+      "disabled": false,
+      "parameters": {
+        "executeOnce": false,
+        "command": "=mv /data/shared/docling-scratch/{{ $json.imageNames }} /data/shared/extracted-images/"
+      },
+      "issues": {}
+    },
+    {
+      "id": "04cddd77-eb1f-437b-bbad-efd4a561abf1",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -464,
+        -32
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    }
+  ],
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "764fc112-be41-45f9-9f7e-424f44e25f0e",
+  "activeVersionId": "764fc112-be41-45f9-9f7e-424f44e25f0e",
+  "versionCounter": 9,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-05-21T19:24:38.864Z",
+      "createdAt": "2026-05-21T19:24:38.864Z",
+      "role": "workflow:owner",
+      "workflowId": "N2zHO916EZijNCRl",
+      "projectId": "brssccCsEIX1w1YY",
+      "project": {
+        "updatedAt": "2026-05-21T18:05:27.443Z",
+        "createdAt": "2026-05-21T18:03:52.761Z",
+        "id": "brssccCsEIX1w1YY",
+        "name": "Abdullah Sayed <abdullahasayed48@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "32c8c25b-d616-43d5-9917-15286f0395aa"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}
