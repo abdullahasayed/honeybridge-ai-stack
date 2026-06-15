@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Local AI Chat</title>
+  <title>HIVE · Honey Bridge</title>
   <link href="https://cdn.jsdelivr.net/npm/@n8n/chat@1.0.0/dist/style.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -774,8 +774,8 @@
           </svg>
         </div>
         <div>
-          <h1>Local AI Chat</h1>
-          <p class="subtitle">Ask your self-hosted n8n and Ollama assistant from a focused workspace.</p>
+          <h1>HIVE</h1>
+          <p class="subtitle">Honey Bridge's second brain — ask anything in the knowledge base.</p>
         </div>
       </div>
 
@@ -910,8 +910,8 @@
               </svg>
             </span>
             <div>
-              <strong>RAG assistant</strong>
-              <span>Responses are generated through your local n8n webhook.</span>
+              <strong>HIVE</strong>
+              <span>Answers come from the hivebrain knowledge base, via your local n8n webhook.</span>
             </div>
           </div>
 
@@ -933,8 +933,8 @@
         <div class="chat-frame">
           <div class="conversation-log" id="conversation-log" aria-live="polite">
             <article class="message assistant">
-              <div class="message-meta">Assistant</div>
-              <div class="message-bubble">Hello. I am ready to send prompts directly to your active n8n Chat Trigger.</div>
+              <div class="message-meta">HIVE</div>
+              <div class="message-bubble">Welcome to HIVE — Honey Bridge's second brain. Ask me anything that's in the knowledge base.</div>
             </article>
           </div>
         </div>
@@ -1012,7 +1012,7 @@
 
       message.className = `message ${role}`;
       meta.className = 'message-meta';
-      meta.textContent = role === 'user' ? 'You' : role === 'system' ? 'Status' : 'Assistant';
+      meta.textContent = role === 'user' ? 'You' : role === 'system' ? 'Status' : 'HIVE';
       bubble.className = 'message-bubble';
       bubble.textContent = text;
 
@@ -1032,7 +1032,7 @@
 
       message.className = 'message assistant';
       meta.className = 'message-meta';
-      meta.textContent = 'Assistant';
+      meta.textContent = 'HIVE';
       bubble.className = 'message-bubble';
       typing.className = 'typing-row';
       typing.setAttribute('aria-label', 'Waiting for response');
