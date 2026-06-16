@@ -117,8 +117,14 @@ services:
           echo "Demo data already imported - skipping"
         else
           echo "First run detected - importing demo data..."
-          n8n import:credentials --separate --input=/demo-data/credentials
-          n8n import:workflow --separate --input=/demo-data/workflows
+          if ls /demo-data/credentials/*.json >/dev/null 2>&1; then
+            n8n import:credentials --separate --input=/demo-data/credentials
+          else
+            echo "No credential exports found - add your own in n8n after boot"
+          fi
+          if ls /demo-data/workflows/*.json >/dev/null 2>&1; then
+            n8n import:workflow --separate --input=/demo-data/workflows
+          fi
           touch /demo-data/.imported
           echo "Import complete"
         fi

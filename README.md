@@ -65,6 +65,35 @@ flowchart LR
 3. It returns a grounded answer, rendering any relevant images as markdown using their `:8080` URLs.
 4. If the knowledge base has nothing relevant, it says so instead of guessing.
 
+### The workflow in n8n
+
+The actual node graph — solid arrows are the data flow, dotted arrows feed the LangChain sub-nodes (models, embeddings, retriever):
+
+```mermaid
+flowchart TD
+    subgraph ING["Ingestion — builds the hivebrain knowledge base"]
+      direction LR
+      T["Local File Trigger<br/>watch rag-files/pending"] --> R["Read/Write Files from Disk"]
+      R --> HQ["HTTP Request<br/>Docling /v1/convert/file"]
+      HQ --> C1["Code: rewrite image refs<br/>to :8080 URLs"]
+      HQ --> C2["Code: extract image names"]
+      C1 --> QV[("Qdrant insert<br/>hivebrain")]
+      C2 --> SO["Split Out: imageNames"] --> EC["Execute Command<br/>mv to extracted-images"]
+      TS["Recursive Text Splitter<br/>700 / 15, markdown"] -. ai_textSplitter .-> DL["Default Data Loader"]
+      DL -. ai_document .-> QV
+      EM["Embeddings Ollama<br/>nomic-embed-text"] -. ai_embedding .-> QV
+    end
+    subgraph ASK["Assistant — HIVE"]
+      direction LR
+      CT["When chat message received"] --> AG["AI Agent<br/>system prompt: You are HIVE"]
+      LM["Ollama Chat Model<br/>gemma4:e4b"] -. ai_languageModel .-> AG
+      QT[("Qdrant retrieve-as-tool<br/>topK 5 · hivebrain")] -. ai_tool .-> AG
+      EM2["Embeddings Ollama<br/>nomic-embed-text"] -. ai_embedding .-> QT
+    end
+```
+
+> 📸 These diagrams are generated from the live workflow JSON. For pixel-perfect canvas shots, open the workflow at http://localhost:5678 and drop screenshots into `assets/`.
+
 ---
 
 ## Stack
@@ -110,7 +139,7 @@ docker compose --profile gpu-amd up
 
 On first run the ingestion and image-processing workflows are imported automatically, and Ollama pulls its base model. Open n8n at http://localhost:5678 to confirm both workflows are active.
 
-> **Models:** HIVE embeds with `nomic-embed-text` and chats with `gpt-5.5` (OpenAI) or `gemma4:e4b` (Ollama). Pull any local models you need, e.g. `docker exec ollama ollama pull nomic-embed-text`.
+> **Models:** HIVE embeds with `nomic-embed-text` and chats on a local Ollama model (`gemma4:e4b`); an OpenAI model (`gpt-5.5`) is configured in the workflow as a drop-in alternative. Pull any local models you need, e.g. `docker exec ollama ollama pull nomic-embed-text`.
 
 ---
 
@@ -139,6 +168,8 @@ All secrets live in `.env` (which is **gitignored — never commit it**):
 | `N8N_ENCRYPTION_KEY` | Encrypts stored credentials. **Must stay constant** — lose it and every saved credential becomes undecryptable. |
 | `N8N_USER_MANAGEMENT_JWT_SECRET` | Signs n8n login sessions. |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | n8n's database. |
+
+> This public repo ships **without** n8n credential exports. After first boot, open n8n → **Credentials** and add your own (Qdrant, Ollama, and an OpenAI key if you use the cloud model).
 
 ---
 

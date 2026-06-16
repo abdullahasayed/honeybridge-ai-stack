@@ -497,46 +497,7 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "pinData": {
-    "Local File Trigger": [
-      {
-        "json": {
-          "event": "add",
-          "path": "/data/shared/rag-files/pending/Internal Meetings 5.10.11 PM.pdf"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Read/Write Files from Disk": [
-      {
-        "json": {
-          "mimeType": "application/pdf",
-          "fileType": "pdf",
-          "fileName": "Internal Meetings 5.10.11 PM.pdf",
-          "fileExtension": "pdf",
-          "fileSize": "14 MB"
-        },
-        "binary": {
-          "data": {
-            "mimeType": "application/pdf",
-            "fileType": "pdf",
-            "fileExtension": "pdf",
-            "data": "filesystem-v2",
-            "directory": "/data/shared/rag-files/pending",
-            "fileName": "Internal Meetings 5.10.11 PM.pdf",
-            "id": "filesystem-v2:workflows/g6iiA2Bq2zfqB10G/executions/52/binary_data/2b300075-b197-4568-a79d-3ed6e163230e",
-            "fileSize": "14 MB",
-            "bytes": 13963888
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "versionId": "f6c7c9c0-c175-4d59-8483-964d9e575192",
   "activeVersionId": "f6c7c9c0-c175-4d59-8483-964d9e575192",
   "versionCounter": 288,
