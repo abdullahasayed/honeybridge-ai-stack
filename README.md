@@ -193,9 +193,9 @@ docker compose --profile gpu-nvidia up
 docker compose --profile gpu-amd up
 ```
 
-On first run the ingestion and image-processing workflows are imported automatically, and Ollama pulls its base model. Open n8n at http://localhost:5678 to confirm both workflows are active.
+On first run the ingestion and image-processing workflows are imported automatically, and Ollama pulls HIVE's models (`nomic-embed-text` + `gemma4:e4b`) into the Docker container. Open n8n at http://localhost:5678 to confirm both workflows are active.
 
-> **Models:** HIVE embeds with `nomic-embed-text` and chats on a local Ollama model (`gemma4:e4b`); an OpenAI model (`gpt-5.5`) is configured in the workflow as a drop-in alternative. Pull any local models you need, e.g. `docker exec ollama ollama pull nomic-embed-text`.
+> **Models:** HIVE embeds with `nomic-embed-text` and chats on a local Ollama model (`gemma4:e4b`); an OpenAI model (`gpt-5.5`) is configured in the workflow as a drop-in alternative. The two Ollama models are pulled automatically into the Docker container on first `up`; to (re)pull manually, run `docker exec ollama ollama pull <model>`.
 
 ---
 

@@ -89,6 +89,22 @@ if ($WithDevTools) {
   }
 }
 
+# ---- Ollama models for HIVE ------------------------------------------------
+# HIVE talks to the Ollama running INSIDE Docker, so the models must live there.
+# The stack pulls them automatically on first 'docker compose up'. If the Docker
+# container is already running, pull them now too.
+Write-Step "Ollama models for HIVE"
+$hiveModels = @('nomic-embed-text','gemma4:e4b')
+$ollamaUp = (Get-Command docker -ErrorAction SilentlyContinue) -and ((docker ps --format '{{.Names}}' 2>$null) -contains 'ollama')
+if ($ollamaUp) {
+  foreach ($m in $hiveModels) {
+    docker exec ollama ollama pull $m
+    if ($LASTEXITCODE -eq 0) { Write-Ok "model: $m" } else { Write-Skip "model: $m (pull failed — verify the tag exists)" }
+  }
+} else {
+  Write-Skip "models pull automatically on first 'docker compose --profile cpu up'"
+}
+
 # ---- next steps ------------------------------------------------------------
 Write-Step "Done. Next steps:"
 @"

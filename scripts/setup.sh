@@ -112,6 +112,20 @@ if [ "$WITH_DEV_TOOLS" -eq 1 ]; then
   # cask claude "/Applications/Claude.app"
 fi
 
+# ---- Ollama models for HIVE ------------------------------------------------
+# HIVE talks to the Ollama running INSIDE Docker, so the models must live there.
+# The stack pulls them automatically on first `docker compose up` (the ollama
+# init service). If the Docker container is already running, pull them now too.
+log "Ollama models for HIVE"
+HIVE_MODELS="nomic-embed-text gemma4:e4b"
+if have docker && docker ps --format '{{.Names}}' 2>/dev/null | grep -qx ollama; then
+  for m in $HIVE_MODELS; do
+    docker exec ollama ollama pull "$m" && ok "model: $m" || skip "model: $m (pull failed — verify the tag exists)"
+  done
+else
+  skip "models pull automatically on first 'docker compose --profile cpu up'"
+fi
+
 # ---- next steps ------------------------------------------------------------
 log "Done. Next steps:"
 cat <<'EOF'
