@@ -1,34 +1,22 @@
 # HIVE
 
-**HIVE is the self-hosted AI "second brain" for [Honey Bridge](https://www.gohoneybridge.com/).**
+**A self-hosted AI "second brain" — a private, retrieval-augmented knowledge assistant.**
 
-It turns the agency's internal documents — meeting notes, SOPs, client material, research — into a private, searchable knowledge base that the team can simply *talk to*. Everything runs locally via Docker, so nothing leaves your machine.
+HIVE turns an organization's internal documents into a searchable knowledge base its team can query in plain language. Everything runs on local infrastructure: documents, embeddings, and inference never leave the host. It was built for [Honey Bridge](https://www.gohoneybridge.com/), a small SEO and design studio, as the shared memory its team queries instead of digging through files.
 
----
-
-## About Honey Bridge
-
-[Honey Bridge](https://www.gohoneybridge.com/) is an SEO and design studio with one specialty:
-
-> **"SEO & Design for Halal Restaurants in Boston"**
-
-Instead of à la carte services, Honey Bridge delivers a single integrated six-part system — brand identity, custom website design, local SEO infrastructure, food photography with metadata optimization, editorial content, and platform optimization across Google Maps, Yelp, DoorDash, and other digital storefronts. It's built once and continuously optimized by the same founding team, with a focus on getting brick-and-mortar halal restaurants ranked — typically within about 60 days. The premise: halal restaurants in Boston are underserved by mainstream marketing agencies.
-
-HIVE is the internal tooling that keeps that small, hands-on team fast — a shared memory they can query instead of digging through files.
+*Built with n8n · Qdrant · Ollama · Docling · PostgreSQL · Docker Compose.*
 
 ---
 
-## What HIVE is
+## What it does
 
-HIVE is a self-hosted AI stack — a **second brain** — made up of a few cooperating parts:
-
-- **🐝 Ingestion pipeline** — watches a folder, OCRs and parses whatever you drop in, then embeds it into a private vector knowledge base (`hivebrain`).
-- **💬 Knowledge assistant** — a chat agent (it speaks as *HIVE*) that answers questions *strictly* from that knowledge base, cites its sources, and says "I'm not sure" instead of guessing.
-- **➕ …and more** — HIVE is built to grow. A supporting Image Processing pipeline already handles extracted figures, and new agents/automations can plug into the same stack.
+- **Ingestion pipeline** — watches a folder, OCRs and parses any document dropped in, then chunks and embeds it into a private vector store (`hivebrain`).
+- **Knowledge assistant** — a chat agent (it answers as *HIVE*) that responds **strictly** from the knowledge base, cites its sources, and admits uncertainty instead of guessing.
+- **Extensible by design** — a supporting image-processing pipeline runs alongside it, and new agents plug into the same stack.
 
 ---
 
-## How it works
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -48,26 +36,13 @@ flowchart LR
     end
 ```
 
-### Ingestion pipeline
-*n8n workflow: `HoneyBridge RAG Ingestion Pipeline`*
+**Ingestion** *(n8n workflow: `HoneyBridge RAG Ingestion Pipeline`)* — a Local File Trigger watches `shared/rag-files/pending/`. Each document is parsed by Docling (OCR + structure), split into chunks, embedded with Ollama (`nomic-embed-text`), and upserted into the Qdrant `hivebrain` collection. Extracted images are served over HTTP so the assistant can link to them.
 
-1. A **Local File Trigger** watches `shared/rag-files/pending/`.
-2. Each new file is sent to **Docling** (`http://docling:5001`) for OCR and structured parsing.
-3. Extracted **images** are written to `shared/extracted-images/` and served by the static file server on `:8080`.
-4. The text is **split** into chunks and **embedded** with Ollama (`nomic-embed-text`).
-5. Embeddings are upserted into the **Qdrant** collection **`hivebrain`** — HIVE's memory.
+**Assistant** — a question, from the bundled chat UI or the n8n chat webhook, reaches an AI Agent whose system prompt requires it to query `hivebrain` before answering. It returns a grounded response with inline image links and source attribution, and says when the knowledge base has nothing relevant rather than inventing an answer.
 
-### Knowledge assistant
-*The agent's system prompt: "You are HIVE, the internal knowledge assistant for Honey Bridge…"*
+### Implementation (n8n node graph)
 
-1. A team member asks a question through the chat UI (`:8080`) or the n8n chat webhook.
-2. HIVE **must** query the `hivebrain` collection before responding — it never answers from the model's own knowledge.
-3. It returns a grounded answer, rendering any relevant images as markdown using their `:8080` URLs.
-4. If the knowledge base has nothing relevant, it says so instead of guessing.
-
-### The workflow in n8n
-
-The actual node graph — solid arrows are the data flow, dotted arrows feed the LangChain sub-nodes (models, embeddings, retriever):
+Solid arrows are the data flow; dotted arrows feed the LangChain sub-nodes (models, embeddings, retriever):
 
 ```mermaid
 flowchart TD
@@ -92,8 +67,6 @@ flowchart TD
     end
 ```
 
-> 📸 These diagrams are generated from the live workflow JSON. For pixel-perfect canvas shots, open the workflow at http://localhost:5678 and drop screenshots into `assets/`.
-
 ---
 
 ## Stack
@@ -102,73 +75,46 @@ flowchart TD
 |---|---|---|
 | **n8n** | Orchestrates the ingestion pipeline and the HIVE agent | http://localhost:5678 |
 | **Qdrant** | Vector store — holds the `hivebrain` knowledge base | http://localhost:6333 |
-| **Ollama** | Local embeddings + optional local LLM | http://localhost:11434 |
+| **Ollama** | Local embeddings + LLM inference | http://localhost:11434 |
 | **Docling** | OCR / document parsing | http://localhost:5001 |
 | **PostgreSQL** | n8n's database (workflows, credentials, executions) | internal |
 | **Static files** | Serves extracted images + the chat UI | http://localhost:8080 |
 
 ---
 
-## Prerequisites
-
-- [Docker](https://www.docker.com/) + Docker Compose
-- An **OpenAI API key** if HIVE should use a cloud LLM (otherwise it runs fully local on Ollama)
-
-On macOS, the bootstrap script below installs all of this for you.
-
----
-
 ## Install dependencies
+
+Requires Docker + Docker Compose (the setup scripts install these). An OpenAI API key is optional — HIVE runs fully local on Ollama otherwise.
 
 ### macOS
 
-A bootstrap script installs everything the stack needs — **Homebrew, Docker Desktop, Git, GitHub CLI, GitHub Desktop, and Ollama**. It's idempotent, so it skips whatever you already have.
-
-**On a fresh machine** (no git yet) — download and run it, then clone the repo:
+Installs Homebrew, Docker Desktop, Git, GitHub CLI / Desktop, and Ollama. Idempotent — skips whatever you already have.
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/abdullahasayed/honeybridge-ai-stack/main/scripts/setup.sh
-bash setup.sh
+# Fresh machine (no git yet):
+curl -fsSLO https://raw.githubusercontent.com/abdullahasayed/honeybridge-ai-stack/main/scripts/setup.sh && bash setup.sh
+
+# Already cloned:
+./scripts/setup.sh                    # core tools
+./scripts/setup.sh --with-dev-tools   # + Claude Code, ChatGPT, Codex
 ```
 
-**If you've already cloned the repo:**
-
-```bash
-./scripts/setup.sh
-```
-
-Add the optional AI developer tools (**Claude Code, ChatGPT, Codex**) with a flag:
-
-```bash
-./scripts/setup.sh --with-dev-tools
-```
-
-> Targets macOS. On Linux, install the equivalents (`docker`, `git`, `gh`, `ollama`) with your package manager. After it runs, open Docker Desktop once to accept its license.
+> Targets macOS; on Linux install the equivalents (`docker`, `git`, `gh`, `ollama`). Open Docker Desktop once afterward to accept its license.
 
 ### Windows
 
-A PowerShell script uses **winget** to install the same core tools — **Git, GitHub CLI, GitHub Desktop, Docker Desktop, Ollama**. Run it in an **elevated PowerShell** (Run as Administrator).
-
-**On a fresh machine** (no git yet) — download and run it, then clone the repo:
+A PowerShell + `winget` script installs the same core tools. Run it in an **elevated PowerShell**.
 
 ```powershell
-irm https://raw.githubusercontent.com/abdullahasayed/honeybridge-ai-stack/main/scripts/setup.ps1 -OutFile setup.ps1
-powershell -ExecutionPolicy Bypass -File .\setup.ps1
+# Fresh machine (no git yet):
+irm https://raw.githubusercontent.com/abdullahasayed/honeybridge-ai-stack/main/scripts/setup.ps1 -OutFile setup.ps1; powershell -ExecutionPolicy Bypass -File .\setup.ps1
+
+# Already cloned:
+powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1                # core tools
+powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 -WithDevTools  # + dev tools
 ```
 
-**If you've already cloned the repo:**
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
-```
-
-Add the optional AI developer tools (**Claude Code, ChatGPT, Codex**) with a flag:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 -WithDevTools
-```
-
-> Requires `winget` (ships with Windows 11 and recent Windows 10). Docker Desktop needs **WSL2** — accept its first-run prompt, or run `wsl --install` in an admin terminal and reboot. The bash-style `docker`/restore commands below run in **Git Bash** or **WSL**.
+> Needs `winget` (Windows 11 / recent 10) and WSL2 for Docker Desktop. Run the bash-style commands below in Git Bash or WSL.
 
 ---
 
@@ -177,47 +123,34 @@ powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 -WithDevTools
 ```bash
 git clone https://github.com/abdullahasayed/honeybridge-ai-stack.git
 cd honeybridge-ai-stack
-cp .env.example .env   # then edit the secrets — see Configuration below
+cp .env.example .env   # then edit the secrets — see Configuration
 ```
 
-Start everything (the `--profile cpu` is required so Docling starts too):
+Start everything (`--profile cpu` is required so Docling starts too):
 
 ```bash
-# Mac / Apple Silicon and CPU-only machines
-docker compose --profile cpu up
-
-# NVIDIA GPU
-docker compose --profile gpu-nvidia up
-
-# AMD GPU (Linux)
-docker compose --profile gpu-amd up
+docker compose --profile cpu up          # Mac / Apple Silicon / CPU-only
+docker compose --profile gpu-nvidia up   # NVIDIA GPU
+docker compose --profile gpu-amd up      # AMD GPU (Linux)
 ```
 
-On first run the ingestion and image-processing workflows are imported automatically, and Ollama pulls HIVE's models (`nomic-embed-text` + `gemma4:e4b`) into the Docker container. Open n8n at http://localhost:5678 to confirm both workflows are active.
+On first run the workflows import automatically and Ollama pulls HIVE's models into the container. Open n8n at http://localhost:5678 to confirm both workflows are active.
 
-> **Models:** HIVE embeds with `nomic-embed-text` and chats on a local Ollama model (`gemma4:e4b`); an OpenAI model (`gpt-5.5`) is configured in the workflow as a drop-in alternative. The two Ollama models are pulled automatically into the Docker container on first `up`; to (re)pull manually, run `docker exec ollama ollama pull <model>`.
+> **Models:** embeddings use `nomic-embed-text`; chat uses local Ollama (`gemma4:e4b`), with OpenAI (`gpt-5.5`) wired as a drop-in alternative. Both Ollama models are pulled automatically on first `up`.
 
 ---
 
-## Using it
+## Usage
 
-### Feed the second brain
-Drop documents (PDFs, etc.) into:
+**Feed the knowledge base** — drop documents (PDFs, etc.) into `shared/rag-files/pending/`. The ingestion pipeline parses, chunks, and embeds them into `hivebrain` automatically; extracted images appear at http://localhost:8080.
 
-```
-shared/rag-files/pending/
-```
-
-The Local File Trigger picks them up, Docling parses them, and the chunks land in the `hivebrain` Qdrant collection automatically. Extracted images become available at http://localhost:8080.
-
-### Ask HIVE
-Open the chat UI at **http://localhost:8080**, or use the chat trigger on the HIVE workflow inside n8n. Ask anything about Honey Bridge's internal material — HIVE retrieves from `hivebrain` and answers with sources.
+**Ask HIVE** — open the chat UI at http://localhost:8080 (or use the chat trigger inside n8n) and ask anything in the corpus. HIVE retrieves from `hivebrain` and answers with sources.
 
 ---
 
-## Configuration & secrets
+## Configuration
 
-All secrets live in `.env` (which is **gitignored — never commit it**):
+Secrets live in `.env` (**gitignored — never commit it**):
 
 | Variable | Purpose |
 |---|---|
@@ -225,16 +158,13 @@ All secrets live in `.env` (which is **gitignored — never commit it**):
 | `N8N_USER_MANAGEMENT_JWT_SECRET` | Signs n8n login sessions. |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | n8n's database. |
 
-> This public repo ships **without** n8n credential exports. After first boot, open n8n → **Credentials** and add your own (Qdrant, Ollama, and an OpenAI key if you use the cloud model).
+> This repo ships **without** n8n credential exports. After first boot, open n8n → **Credentials** and add your own (Qdrant, Ollama, and an OpenAI key if used).
 
 ---
 
 ## Backup & restore
 
-HIVE's functional state lives in two Docker volumes (plus the `.env` key) — not in this repo:
-
-- **PostgreSQL** — workflows, credentials, execution history
-- **Qdrant** — the `hivebrain` vector knowledge base
+State lives in two Docker volumes (plus the `.env` key), not in the repo: **PostgreSQL** (workflows, credentials, history) and **Qdrant** (the `hivebrain` vectors).
 
 **Back up:**
 ```bash
@@ -246,7 +176,7 @@ docker run --rm -v honeybridge-ai-stack_qdrant_storage:/data \
   -v "$PWD/volume-backups":/backup alpine sh -c "cd /data && tar czf /backup/qdrant_storage.tar.gz ."
 ```
 
-**Restore on a fresh machine** (after placing `.env` and `volume-backups/` in the project root):
+**Restore** (place `.env` and `volume-backups/` in the project root first):
 ```bash
 touch n8n/demo-data/.imported          # skip auto-import so the DB isn't duplicated
 docker compose --profile cpu create
