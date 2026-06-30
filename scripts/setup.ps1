@@ -4,7 +4,7 @@
   Install everything needed to run HIVE, plus optional dev tools. (Windows)
 
 .DESCRIPTION
-  Uses winget (ships with Windows 11 and recent Windows 10). Idempotent —
+  Uses winget (ships with Windows 11 and recent Windows 10). Idempotent --
   skips anything that's already installed. Run in an elevated PowerShell so
   Docker Desktop installs cleanly.
 
@@ -85,7 +85,7 @@ if ($WithDevTools) {
       if ($LASTEXITCODE -eq 0) { Write-Ok 'codex' } else { Write-Skip 'codex' }
     }
   } else {
-    Write-Skip 'npm not found (restart the terminal after Node installs, then re-run) — skipping Claude Code and Codex'
+    Write-Skip 'npm not found (restart the terminal after Node installs, then re-run) -- skipping Claude Code and Codex'
   }
 }
 
@@ -99,7 +99,7 @@ $ollamaUp = (Get-Command docker -ErrorAction SilentlyContinue) -and ((docker ps 
 if ($ollamaUp) {
   foreach ($m in $hiveModels) {
     docker exec ollama ollama pull $m
-    if ($LASTEXITCODE -eq 0) { Write-Ok "model: $m" } else { Write-Skip "model: $m (pull failed — verify the tag exists)" }
+    if ($LASTEXITCODE -eq 0) { Write-Ok "model: $m" } else { Write-Skip "model: $m (pull failed -- verify the tag exists)" }
   }
 } else {
   Write-Skip "models pull automatically on first 'docker compose --profile cpu up'"
@@ -109,7 +109,7 @@ if ($ollamaUp) {
 Write-Step "Done. Next steps:"
 @"
   1. Restart your terminal so PATH updates (git, gh, docker, npm).
-  2. Open Docker Desktop once and accept the license. It needs WSL2 — accept its
+  2. Open Docker Desktop once and accept the license. It needs WSL2 -- accept its
      first-run prompt, or run 'wsl --install' in an admin terminal and reboot.
   3. Clone into a folder named 'honeybridge-ai-stack', then follow the README "Quick start".
      (The bash-style docker/restore commands run in Git Bash or WSL.)
