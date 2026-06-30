@@ -118,7 +118,9 @@ On macOS, the bootstrap script below installs all of this for you.
 
 ---
 
-## Install dependencies (macOS)
+## Install dependencies
+
+### macOS
 
 A bootstrap script installs everything the stack needs — **Homebrew, Docker Desktop, Git, GitHub CLI, GitHub Desktop, and Ollama**. It's idempotent, so it skips whatever you already have.
 
@@ -142,6 +144,31 @@ Add the optional AI developer tools (**Claude Code, ChatGPT, Codex**) with a fla
 ```
 
 > Targets macOS. On Linux, install the equivalents (`docker`, `git`, `gh`, `ollama`) with your package manager. After it runs, open Docker Desktop once to accept its license.
+
+### Windows
+
+A PowerShell script uses **winget** to install the same core tools — **Git, GitHub CLI, GitHub Desktop, Docker Desktop, Ollama**. Run it in an **elevated PowerShell** (Run as Administrator).
+
+**On a fresh machine** (no git yet) — download and run it, then clone the repo:
+
+```powershell
+irm https://raw.githubusercontent.com/abdullahasayed/honeybridge-ai-stack/main/scripts/setup.ps1 -OutFile setup.ps1
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
+```
+
+**If you've already cloned the repo:**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
+```
+
+Add the optional AI developer tools (**Claude Code, ChatGPT, Codex**) with a flag:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1 -WithDevTools
+```
+
+> Requires `winget` (ships with Windows 11 and recent Windows 10). Docker Desktop needs **WSL2** — accept its first-run prompt, or run `wsl --install` in an admin terminal and reboot. The bash-style `docker`/restore commands below run in **Git Bash** or **WSL**.
 
 ---
 
