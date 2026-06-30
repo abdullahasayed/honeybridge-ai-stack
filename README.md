@@ -126,7 +126,7 @@ cd honeybridge-ai-stack
 cp .env.example .env   # then edit the secrets — see Configuration
 ```
 
-Start everything (`--profile cpu` is required so Docling starts too):
+Start everything — pick the **one** profile that matches your hardware. A profile is required: it starts Ollama and Docling (without one, only the core services come up).
 
 ```bash
 docker compose --profile cpu up          # Mac / Apple Silicon / CPU-only
