@@ -114,6 +114,35 @@ flowchart TD
 - [Docker](https://www.docker.com/) + Docker Compose
 - An **OpenAI API key** if HIVE should use a cloud LLM (otherwise it runs fully local on Ollama)
 
+On macOS, the bootstrap script below installs all of this for you.
+
+---
+
+## Install dependencies (macOS)
+
+A bootstrap script installs everything the stack needs — **Homebrew, Docker Desktop, Git, GitHub CLI, GitHub Desktop, and Ollama**. It's idempotent, so it skips whatever you already have.
+
+**On a fresh machine** (no git yet) — download and run it, then clone the repo:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/abdullahasayed/honeybridge-ai-stack/main/scripts/setup.sh
+bash setup.sh
+```
+
+**If you've already cloned the repo:**
+
+```bash
+./scripts/setup.sh
+```
+
+Add the optional AI developer tools (**Claude Code, ChatGPT, Codex**) with a flag:
+
+```bash
+./scripts/setup.sh --with-dev-tools
+```
+
+> Targets macOS. On Linux, install the equivalents (`docker`, `git`, `gh`, `ollama`) with your package manager. After it runs, open Docker Desktop once to accept its license.
+
 ---
 
 ## Quick start
