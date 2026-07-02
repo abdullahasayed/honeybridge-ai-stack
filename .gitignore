@@ -11,3 +11,5 @@ shared/rag-files/pending/*
 shared/rag-files/processed/*
 !shared/rag-files/processed/.gitkeep
 n8n/demo-data/.imported
+# Private planning docs and eval data - never push
+docs-private/
