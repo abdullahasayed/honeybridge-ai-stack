@@ -72,6 +72,8 @@ x-docling: &service-docling
     - DOCLING_SERVE_SCRATCH_PATH=/shared/docling-scratch
     # Keep results after retrieval so other services can access them
     - DOCLING_SERVE_SINGLE_USE_RESULTS=false
+    # Allow long parses (large/scanned PDFs) before the sync endpoint 504s. Default is 120s.
+    - DOCLING_SERVE_MAX_SYNC_WAIT=600
     # Gradio security: allow writing to /shared directory
     - GRADIO_ALLOWED_PATHS=/shared
     - GRADIO_TEMP_DIR=/shared/docling-scratch
@@ -257,6 +259,7 @@ services:
       - DOCLING_SERVE_ENABLE_UI=true
       - DOCLING_SERVE_SCRATCH_PATH=/shared/docling-scratch
       - DOCLING_SERVE_SINGLE_USE_RESULTS=false
+      - DOCLING_SERVE_MAX_SYNC_WAIT=600
       - GRADIO_ALLOWED_PATHS=/shared
       - GRADIO_TEMP_DIR=/shared/docling-scratch
       - NVIDIA_VISIBLE_DEVICES=all
