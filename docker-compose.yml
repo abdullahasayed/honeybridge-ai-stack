@@ -144,7 +144,10 @@ services:
     ports:
       - 5678:5678
     volumes:
-      - n8n_storage:/home/node/.n8n
+      # n8n runs as root (below), so its data dir is /root/.n8n — mount the persistent
+      # volume there, not /home/node/.n8n, or filesystem binary data lives in the
+      # container's ephemeral layer and is lost on every container recreate.
+      - n8n_storage:/root/.n8n
       - ./n8n/demo-data:/demo-data
       - ./shared:/data/shared
       - ./shared/rag-files:/data/rag-files
