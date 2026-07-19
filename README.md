@@ -189,6 +189,36 @@ docker compose --profile cpu up -d
 
 Keep `.env` and `volume-backups/` out of git and transfer them out-of-band.
 
+### Move HIVE to another device (automated)
+
+Two scripts wrap the manual steps above so you can clone a whole HIVE host onto a new machine.
+
+**On the current host — build the bundle:**
+
+```bash
+./scripts/package-transfer.sh                                   # macOS / Linux / Git Bash
+# or, on Windows (Blue Runner):
+powershell -ExecutionPolicy Bypass -File .\scripts\package-transfer.ps1
+```
+
+This regenerates a **fresh** Postgres dump and Qdrant vector export from the running stack, then gathers every gitignored file needed to reproduce HIVE — `.env`, `volume-backups/`, `shared/rag-files/`, and `docs-private/` — into `transfer-bundle/`. (Add `--no-refresh` to skip regeneration and copy the existing `volume-backups/` snapshot instead; `--cold` stops the stack for a consistent Qdrant snapshot at the cost of brief downtime.)
+
+**Move the bundle out-of-band.** It contains secrets — the `N8N_ENCRYPTION_KEY`, the DB password, and the credential dump — so copy it over an encrypted channel (Tailscale `taildrop`, an encrypted drive). Never commit or email it; `transfer-bundle/` is gitignored.
+
+**On the new device — integrate it:** drop `transfer-bundle/` into the repo root and run setup. It detects the bundle and, once Docker is running, restores it **after a confirmation prompt**:
+
+```bash
+./scripts/setup.sh                       # detects transfer-bundle/ and offers to restore
+# or run the restore directly, any time:
+./scripts/restore-transfer.sh            # --force skips the prompt; --profile gpu-nvidia matches a GPU host
+# Windows equivalent:
+powershell -ExecutionPolicy Bypass -File .\scripts\restore-transfer.ps1 -Profile gpu-nvidia
+```
+
+The restore places `.env` and the file bundles, imports the Postgres DB, loads the Qdrant vectors, and brings the stack up — so the new machine comes up as a clone with the **same encryption key**, meaning saved credentials still decrypt. It is destructive (it overwrites this machine's `.env`, DB, and Qdrant volume), which is why it confirms first; an existing `.env` is backed up to `.env.bak.*`.
+
+> **Note:** this clones a HIVE **host**. Adding a *teammate* who just needs to reach an existing host is different — they only join the Tailscale tailnet (no bundle). See `docs-private/HIVE-access-and-onboarding.md`.
+
 ---
 
 ## Credits

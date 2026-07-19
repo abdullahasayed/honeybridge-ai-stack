@@ -9,6 +9,10 @@
 #   ./scripts/setup.sh                    # core dependencies only
 #   ./scripts/setup.sh --with-dev-tools   # also install Claude Code, ChatGPT, Codex
 #
+# If a transfer-bundle/ (from scripts/package-transfer.sh on another device) is
+# present in the repo root, setup detects it and offers to restore it so this
+# machine comes up as a clone. Override the location with HIVE_BUNDLE=/path.
+#
 # The script is idempotent — it skips anything that's already installed.
 #
 set -uo pipefail
@@ -126,11 +130,36 @@ else
   skip "models pull automatically on first 'docker compose --profile cpu up'"
 fi
 
+# ---- migration bundle (new-device integration) -----------------------------
+# If a transfer-bundle/ (produced by scripts/package-transfer.sh on the old
+# device) is present, integrate it so this machine comes up as a clone of the
+# source host — .env, the n8n DB, the Qdrant vectors, source docs, and the
+# private docs all come across. restore-transfer.sh confirms before it
+# overwrites anything (pass --force there to skip the prompt).
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUNDLE_DIR="${HIVE_BUNDLE:-$REPO/transfer-bundle}"
+log "Migration bundle"
+if [ -d "$BUNDLE_DIR" ]; then
+  ok "Found $BUNDLE_DIR"
+  if have docker && docker info >/dev/null 2>&1; then
+    "$REPO/scripts/restore-transfer.sh" --bundle "$BUNDLE_DIR" \
+      || skip "restore did not finish — run ./scripts/restore-transfer.sh manually once Docker is ready"
+  else
+    skip "Docker isn't running yet. Open Docker Desktop (accept the license), then run:"
+    echo  "    ./scripts/restore-transfer.sh --bundle \"$BUNDLE_DIR\""
+  fi
+else
+  skip "no transfer-bundle/ found — fresh install (follow the README \"Quick start\")"
+fi
+
 # ---- next steps ------------------------------------------------------------
 log "Done. Next steps:"
 cat <<'EOF'
   1. Open Docker Desktop once and accept the license (the `docker` CLI needs it running).
-  2. Clone into a folder named 'honeybridge-ai-stack', then follow the README "Quick start".
+  2. Clone into a folder named 'honeybridge-ai-stack', then either:
+       • migrating an existing HIVE?  drop transfer-bundle/ in the repo root and re-run
+         ./scripts/setup.sh  (or ./scripts/restore-transfer.sh) to clone it onto this box; or
+       • fresh install?  follow the README "Quick start".
   3. The stack runs Ollama inside Docker, so native Ollama is optional. If you DO run it on
      the host, see the README note "For Mac users running Ollama locally" to avoid a port
      11434 clash.
