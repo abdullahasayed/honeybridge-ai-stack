@@ -3,6 +3,12 @@
 # Local migration/backup artifacts — never push (contains the Postgres dump with encrypted credentials)
 volume-backups/
 
+# Device-transfer bundle from scripts/package-transfer — contains .env, the DB
+# dump, and private docs. Move it out-of-band; never commit it.
+transfer-bundle/
+# Backups of .env made by scripts/restore-transfer
+.env.bak.*
+
 # macOS noise
 .DS_Store
 

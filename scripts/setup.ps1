@@ -8,6 +8,10 @@
   skips anything that's already installed. Run in an elevated PowerShell so
   Docker Desktop installs cleanly.
 
+  If a transfer-bundle\ (from scripts\package-transfer.ps1 on another device)
+  is present in the repo root, setup detects it and offers to restore it so
+  this machine comes up as a clone. Override the location with $env:HIVE_BUNDLE.
+
 .PARAMETER WithDevTools
   Also install Node.js, Claude Code, ChatGPT, and Codex.
 
@@ -105,14 +109,39 @@ if ($ollamaUp) {
   Write-Skip "models pull automatically on first 'docker compose --profile cpu up'"
 }
 
+# ---- migration bundle (new-device integration) -----------------------------
+# If a transfer-bundle\ (produced by scripts\package-transfer.ps1 on the old
+# device) is present, integrate it so this machine comes up as a clone of the
+# source host. restore-transfer.ps1 confirms before it overwrites anything
+# (pass -Force there to skip the prompt; -Profile gpu-nvidia on an NVIDIA host).
+$Repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$BundleDir = if ($env:HIVE_BUNDLE) { $env:HIVE_BUNDLE } else { Join-Path $Repo 'transfer-bundle' }
+Write-Step "Migration bundle"
+if (Test-Path $BundleDir) {
+  Write-Ok "Found $BundleDir"
+  $dockerReady = [bool](Get-Command docker -ErrorAction SilentlyContinue)
+  if ($dockerReady) { docker info *> $null; $dockerReady = ($LASTEXITCODE -eq 0) }
+  if ($dockerReady) {
+    & (Join-Path $Repo 'scripts\restore-transfer.ps1') -Bundle $BundleDir
+  } else {
+    Write-Skip "Docker isn't running yet. Open Docker Desktop (accept the license), then run:"
+    Write-Host "    powershell -ExecutionPolicy Bypass -File .\scripts\restore-transfer.ps1 -Bundle `"$BundleDir`""
+  }
+} else {
+  Write-Skip "no transfer-bundle\ found -- fresh install (follow the README `"Quick start`")"
+}
+
 # ---- next steps ------------------------------------------------------------
 Write-Step "Done. Next steps:"
 @"
   1. Restart your terminal so PATH updates (git, gh, docker, npm).
   2. Open Docker Desktop once and accept the license. It needs WSL2 -- accept its
      first-run prompt, or run 'wsl --install' in an admin terminal and reboot.
-  3. Clone into a folder named 'honeybridge-ai-stack', then follow the README "Quick start".
-     (The bash-style docker/restore commands run in Git Bash or WSL.)
+  3. Clone into a folder named 'honeybridge-ai-stack', then either:
+       - migrating an existing HIVE?  drop transfer-bundle\ in the repo root and re-run
+         setup.ps1  (or scripts\restore-transfer.ps1) to clone it onto this box; or
+       - fresh install?  follow the README "Quick start".
+     (The bash-style docker/restore commands run in Git Bash or WSL; the .ps1 restore is native.)
   4. The stack runs Ollama inside Docker, so native Ollama is optional. If you run it on
      the host, see the README note to avoid a port 11434 clash.
 "@ | Write-Host
